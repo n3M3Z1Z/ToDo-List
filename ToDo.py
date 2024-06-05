@@ -15,173 +15,13 @@
 # import nessesary modules, files & libraries
 import os
 from flask import Flask, jsonify, request, abort
-    
+import tasks_templet as ts
+  
 # define the api overall function 
 app =  Flask(__name__)
 
-# initialize the tasks list
-tasks = [
-    {
-      "id": 1,
-      "title": "Python installieren",
-      "description": "Lade die neueste Version von Python von der offiziellen Website herunter und installiere sie.",
-      "status": "pending",
-      "priority": "hoch",
-      "due_date": "2024-06-10"
-    },
-    {
-      "id": 2,
-      "title": "Virtuelle Umgebung einrichten",
-      "description": "Lerne, wie man virtuelle Umgebungen mit venv oder virtualenv erstellt und verwaltet.",
-      "status": "pending",
-      "priority": "hoch",
-      "due_date": "2024-06-11"
-    },
-    {
-      "id": 3,
-      "title": "Grundlegende Python-Syntax",
-      "description": "Überprüfe die grundlegende Python-Syntax einschließlich Variablen, Schleifen und Bedingungen.",
-      "status": "pending",
-      "priority": "mittel",
-      "due_date": "2024-06-12"
-    },
-    {
-      "id": 4,
-      "title": "Python-Datenstrukturen",
-      "description": "Lerne über Listen, Wörterbücher, Tupel und Mengen.",
-      "status": "pending",
-      "priority": "mittel",
-      "due_date": "2024-06-13"
-    },
-    {
-      "id": 5,
-      "title": "Funktionen in Python",
-      "description": "Verstehe, wie man Funktionen in Python definiert und verwendet.",
-      "status": "pending",
-      "priority": "mittel",
-      "due_date": "2024-06-14"
-    },
-    {
-      "id": 6,
-      "title": "Objektorientierte Programmierung",
-      "description": "Lerne die Grundlagen der objektorientierten Programmierung in Python, einschließlich Klassen und Objekten.",
-      "status": "pending",
-      "priority": "hoch",
-      "due_date": "2024-06-15"
-    },
-    {
-      "id": 7,
-      "title": "Installiere Flask",
-      "description": "Installiere Flask, ein leichtgewichtiges Web-Framework für Python.",
-      "status": "pending",
-      "priority": "hoch",
-      "due_date": "2024-06-16"
-    },
-    {
-      "id": 8,
-      "title": "Katzenvideos schauen",
-      "description": "Verbringe 30 Minuten mit dem Anschauen von Katzenvideos zur Entspannung.",
-      "status": "pending",
-      "priority": "niedrig",
-      "due_date": "2024-06-17"
-    },
-    {
-      "id": 9,
-      "title": "Python und APIs lernen",
-      "description": "Erstelle eine einfache Flask-Anwendung mit ein paar Routen.",
-      "status": "pending",
-      "priority": "hoch",
-      "due_date": "2024-06-18"
-    },
-    {
-      "id": 10,
-      "title": "In den Spiegel schauen und sagen: Ich kann das!",
-      "description": "Motiviere dich selbst für 5 Minuten vor dem Spiegel.",
-      "status": "pending",
-      "priority": "mittel",
-      "due_date": "2024-06-19"
-    },
-    {
-      "id": 11,
-      "title": "Python-Quiz machen",
-      "description": "Mache ein Python-Quiz, um dein Wissen zu testen.",
-      "status": "pending",
-      "priority": "hoch",
-      "due_date": "2024-06-20"
-    },
-    {
-      "id": 12,
-      "title": "Tanze wie niemand zusieht",
-      "description": "Verbringe 10 Minuten damit, zu deiner Lieblingsmusik zu tanzen.",
-      "status": "pending",
-      "priority": "niedrig",
-      "due_date": "2024-06-21"
-    },
-    {
-      "id": 13,
-      "title": "Python-Bücher lesen",
-      "description": "Lies ein Kapitel aus einem Python-Buch.",
-      "status": "pending",
-      "priority": "mittel",
-      "due_date": "2024-06-22"
-    },
-    {
-      "id": 14,
-      "title": "Ein Bild von einer Python-Schlange zeichnen",
-      "description": "Zeichne ein Bild von einer Python-Schlange und hänge es auf.",
-      "status": "pending",
-      "priority": "niedrig",
-      "due_date": "2024-06-23"
-    },
-    {
-      "id": 15,
-      "title": "API-Dokumentation lesen",
-      "description": "Lies die Dokumentation einer bekannten API.",
-      "status": "pending",
-      "priority": "mittel",
-      "due_date": "2024-06-24"
-    },
-    {
-      "id": 16,
-      "title": "Python-Übungen machen",
-      "description": "Löse ein paar Python-Übungen auf einer Online-Plattform.",
-      "status": "pending",
-      "priority": "hoch",
-      "due_date": "2024-06-25"
-    },
-    {
-      "id": 17,
-      "title": "Einen Python-Witz lernen",
-      "description": "Lerne einen neuen Witz über Python und erzähle ihn deinen Freunden.",
-      "status": "pending",
-      "priority": "niedrig",
-      "due_date": "2024-06-26"
-    },
-    {
-      "id": 18,
-      "title": "Kaffee trinken und entspannen",
-      "description": "Mache eine Pause, trinke einen Kaffee und entspanne dich.",
-      "status": "pending",
-      "priority": "niedrig",
-      "due_date": "2024-06-27"
-    },
-    {
-      "id": 19,
-      "title": "Einen Tag frei nehmen",
-      "description": "Nimm dir einen Tag frei von allem Lernen und genieße ihn.",
-      "status": "pending",
-      "priority": "niedrig",
-      "due_date": "2024-06-28"
-    },
-    {
-      "id": 20,
-      "title": "Python-Projekt starten",
-      "description": "Beginne mit einem kleinen Python-Projekt, das dich interessiert.",
-      "status": "pending",
-      "priority": "hoch",
-      "due_date": "2024-06-29"
-    }
-]
+# import 'tasks' from 'tasks.py'
+tasks = ts.tasks
 
 """
     # utility function to find task by id
@@ -196,7 +36,7 @@ tasks = [
 """
 
 # utility function to find task by id
-def task_by_id(task):
+def task_by_id(task_id):
     return next((task for task in tasks if task["id"] == task_id), None)
 
 """ # set enpoint to retrive all tasks
@@ -208,7 +48,7 @@ def task_by_id(task):
     
 # set endpoint to retrive all tasks
 @app.route("/tasks", methods=["GET"])
-def get_tasks(task_id):
+def get_tasks():
     return jsonify(tasks)
 
 """
@@ -250,7 +90,7 @@ def get_task(task_id):
         
 # set endpoint to create a new task
 @app.route('/tasks', methods=['POST'])
-def create_task(task_id):
+def create_task():
     if not request.json or 'title' not in request.json or 'description' not in request.json:
         abort(404)
     new_task = {
@@ -284,7 +124,7 @@ def create_task(task_id):
 # set endpoint to update a specific task by its unique id
 @app.route('/tasks/<int:task_id>', methods=['PUT'])
 def update_task(task_id):
-    task = get_task(task_id)
+    task = get_task(id)
     if task is None:
         abort(404)
     if not request.json:
@@ -420,4 +260,3 @@ def delete_pending_tasks():
 # set 'main' function to run the app
 if __name__ == "__main__":
     app.run(debug=True)   
-        
