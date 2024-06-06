@@ -1,9 +1,9 @@
 """
-this script implements a simple ToDo list API using Flask.
-this API allows users to:
-    - create, update, delete, mark tasks as completed, filter or delete tasks by priority & status
+This script implements a simple ToDo list API using Flask.
+This API allows users to:
+    - Create, Update, Delete, mark tasks as completed, filter or delete tasks by priority & status
 
-each task has the following structure:
+Each task has the following structure:
     - id (integer): Unique identifier of the task
     - title (string): Title of the task
     - description (string): Description of the task
@@ -12,431 +12,255 @@ each task has the following structure:
     - due_date (string): Due date of the task  
 """
 
-# import necessary modules, files & libraries
-from flask import Flask, jsonify, request, abort, render_template_string, send_file
-import re
-import sqlite3
-import logging
-from werkzeug.utils import secure_filename
-import tasks_templet as ts
-
-# define the API overall function 
+# Import necessary modules, files & libraries
+import os
+from flask import Flask, jsonify, request
+import api_beispieldaten as ts
+  
+# Define the API overall function 
 app = Flask(__name__)
 
-# import 'tasks' from 'tasks_templet.py'
+# Import 'tasks' from 'tasks_templet.py'
 tasks = ts.tasks
 
-# set up logging
-logging.basicConfig(level=logging.INFO)
-
-# allowed file extensions for upload
-ALLOWED_EXTENSIONS = {'txt', 'json', 'csv'}
-
 """
-    # function to check if a file has one of the allowed extensions
-
-    check if the uploaded file has an allowed extension.
-    
-    parameters:
-    filename (str): The name of the uploaded file.
-    
-    returns:
-    bool: True if the file extension is allowed, False otherwise.
-"""
-
-# function to check if a file has one of the allowed extensions
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-"""
-    # function to sanitize user input
-    
-    sanitize user input to remove any potentially harmful characters.
-    
-    parameters:
-    user_input (str): The raw input provided by the user.
-    
-    returns:
-    str: The sanitized input with only alphanumeric characters.
-"""
-
-
-# input validation function to sanitize user input
-def sanitize_input(user_input):
-    return re.sub(r'\W+', '', user_input)
-
-"""
-    # function to diesable potentially dangerous functions
-    
-    disable potentially dangerous functions to prevent code execution attacks.
-    This function is currently a placeholder as no dangerous functions are being used.
-"""
-
-# disable dangerous functions to prevent code execution
-def disabled_functions():
-    pass
-
-# Call the function to disable dangerous functions
-disabled_functions()
-
-"""
-    # display the main page 
-    
-    returns:
-    str: HTML content for the main page.
-"""
-
-# display the main page
-@app.route('/')
-def index():
-    return render_template_string("""
-        <h1>Secure Web Application</h1>
-        <form action="/submit" method="post" enctype="multipart/form-data">
-            Name: <input type="text" name="name"><br>
-            File: <input type="file" name="file"><br>
-            <input type="submit" value="Submit">
-        </form>
-    """)
-    
-"""
-    # process the submitted form data and file upload.
-    
-    steps:
-    - sanitize the user input.
-    - check if the uploaded file is allowed.
-    - save the file securely.
-    - Perform a simulated database operation using parameterized queries.
-    - return a response in the same format as the input file.
-    
-    returns:
-    response (str or JSON): Success message in the format of the uploaded file, or error message if invalid file format.
-"""
-
-# process the submitted form data and file upload
-@app.route('/submit', methods=['POST'])
-def submit():
-    name = sanitize_input(request.form['name'])
-    
-    file = request.files['file']
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file_path = f'/path/to/save/{filename}'
-        file.save(file_path)
-        
-        conn = sqlite3.connect('example.db')
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO users (name) VALUES (?)", (name,))
-        conn.commit()
-        conn.close()
-
-        file_extension = filename.rsplit('.', 1)[1].lower()
-
-        if file_extension == 'json':
-            response = jsonify({"message": "Submission successful!"})
-        elif file_extension == 'csv':
-            response = f"Submission successful! implement keylogger, Name: {name}, File: {filename}"
-            response = response.replace(',', '\n')
-        else:
-            response = f"Submission successful!\nName: {name}\nFile: {filename}"
-        
-        print(f"Submission successful for name: {name}, file: {filename}")
-        return response
-    else:
-        print("Invalid file format.")
-        return "Invalid file format - Installing and running ransomware as punishment."
-    
-"""
-    # function to handle internal server errors
-        
-    parameters:
-    error (Exception): The error that occurred.
-    
-    returns:
-    str: error message for the client.
-"""
-    
-# function to handle internal server errors
-@app.errorhandler(500)
-def handle_internal_error(error):
-    logging.error(f"Server Error: {error}, IP: {request.remote_addr}")
-    return "oh now you've done it - Internal server error occurred naughty boy no x-mas gifts for you.", 500
-
-"""
-    # function to handle forbidden actions.
-    
-    parameters:
-    error (Exception): The error that occurred.
-    
-    returns:
-    str: Error message for the client.
-"""
-
-# function to handle forbidden actions
-@app.errorhandler(403)
-def handle_forbidden(error):
-    logging.error(f"Forbidden: {error}, IP: {request.remote_addr}")
-    return "Forbidden action - you are a naughte boy no c´x-mas gifts for you this year sorry.", 403
-
-"""
-    # handle page not found errors.
-    
-    parameters:
-    error (Exception): The error that occurred.
-    
-    returns:
-    str: Error message for the client.
-"""
-
-# function to handle page not found errors
-@app.errorhandler(404)
-def handle_not_found(error):
-    logging.error(f"Not Found: {error}, IP: {request.remote_addr}")
-    return "Page not found - running  a virus instead.", 404
-
-"""
-    # function to find a task by its id.
+    # set endpoint to retrieve task by id
     
     parameters:
     task_id (int): Unique identifier of the task.
     
     returns:
-    dict: The task with the specified ID, or None if not found.
+    dict: task with specified id
 """
 
-# function to find a task by its ID
+# Utility function to find task by id
 def task_by_id(task_id):
     return next((task for task in tasks if task["id"] == task_id), None)
 
+# Funktion um zu checken, ob auch wirklich ein Wert übergeben wurde
+def is_valid_value(value):
+    return value not in (None, '', [], {}, ())
 """
-    # set endpoint to retrieve all tasks.
+    # set endpoint to retrieve all tasks
+    
+    retrieve all tasks
     
     returns:
     JSON: a list of all tasks.
 """
 
-# set endpoint to retrieve all tasks
+# Set endpoint to retrieve all tasks
 @app.route("/tasks", methods=["GET"])
 def get_tasks():
-    print("Fetching all tasks...")
-    return jsonify(message="Alright heres your ToDo List now complete them all - hurry up", tasks=tasks)
+    if not tasks:
+        return jsonify({"message": "Es gibt keine Tasks"}), 404
+    return jsonify(message="Look at your mess, way to many open tasks, get them done!", tasks=tasks)
 
-
-"""   
-    # set endpoint to retrieve a task by its id
+"""
+    # set endpoint to retrieve task by id
     
     parameters:
     task_id (int): Unique identifier of the task.
     
     returns:
-    JSON: The task with the given ID, or 404 if not found.
+    dict: task with given id
 """
 
-# set endpoint to retrieve task by id
+# Set endpoint to retrieve a task by id
 @app.route("/tasks/<int:task_id>", methods=["GET"])
 def get_task(task_id):
-    print(f"Fetching task with ID: {task_id}")
     task = task_by_id(task_id)
     if task:
-        print(f"Task found: {task}")
-        return jsonify(message="thank you for your purchase", task=task)
+        return jsonify(task)
     else:
-        print(f"Task with ID {task_id} not found.")
-        abort(404)
-        
+        return jsonify({"Fehler": "Nope, site dosen't exit - search elsewhere"}), 404
+
 """
-    # set endpoint to create a new task.
+    # set endpoint to create a new task
     
     request JSON body:
     - title (string): Title of the task.
     - description (string): Description of the task.
     - priority (integer): Priority of the task.
     - due_date (string): Due date of the task.
-    
-    returns:
-    JSON: The created task, or 400 if the request is invalid.
 """
-    
-# set endpoint to create a new task
+
+# Set endpoint to create a new task
 @app.route('/tasks', methods=['POST'])
 def create_task():
-    if not request.json or 'title' not in request.json or 'description' not in request.json:
-        print("Invalid task creation request.")
-        return jsonify(message="oohpsie Whoopsie somethimg went terribly wrong - Idendified Problem: Layer 8")
-        abort(400)
-    new_task = {
-        "id": tasks[-1]["id"] + 1 if tasks else 1,
-        "title": request.json["title"],
-        "description": request.json["description"],
-        "status": request.json.get("status", "pending"),
-        "priority": request.json.get("priority", 0),
-        "due_date": request.json.get("due_date", "")
-    }
-    tasks.append(new_task)
-    print(f"Task created - don't bother me again: {new_task}")
-    return jsonify(message="ugh really? more tasks? here take this forkbomb as a thank you!", new_task=new_task), 201
+    if not request.json:
+        return jsonify({"Fehler": "Request muss im JSON-Format sein"}), 400 
+    if 'title' not in request.json or 'description' not in request.json:
+        return jsonify({"Fehler": "Es müssen sowohl der title, wie auch die description gesetzt sein. Sollstest du eigent wissen"}), 400
+    
+    try:
+        new_task = {
+            "id": tasks[-1]["id"] + 1,
+            "title": request.json["title"],
+            "description": request.json["description"],
+            "status": request.json.get("status", "pending"), # Default value is pending
+            "priority": request.json.get("priority", "niedrig"),
+            "due_date": request.json.get("due_date", None)
+        }
+        tasks.append(new_task)
+        return jsonify(new_task), 201
+    
+    except Exception as e:
+        return jsonify({"Fehler": str(e)}), 400
 
 """
-    # set endpoint to update a specific task by its unique ID.
+    # set endpoint to update a specific task
     
-    rarameters:
-    task_id (int): Unique identifier of the task to update.
-    
-    request JSON body:
-    - title (string): New title of the task.
-    - status (string): New status of the task.
-    - description (string): New description of the task.
-    - priority (integer): New priority of the task.
-    - due_date (string): New due date of the task.
+    parameters: 
+    id (int): Unique identifier of the task.
     
     returns:
-    JSON: The updated task, or 404 if the task is not found, or 400 if the request is invalid.
+    JSON: updated task
 """
-    
-# set endpoit to update a task
+
+# Set endpoint to update a specific task by its unique id
 @app.route('/tasks/<int:task_id>', methods=['PUT'])
 def update_task(task_id):
-    print(f"Updating task with ID: {task_id}")
     task = task_by_id(task_id)
+    # schaue ob der Task existiert
     if task is None:
-        print(f"Task with ID {task_id} not found.")
-        abort(404)
-    if not request.json:
-        print("Invalid update request.")
-        abort(400)
-    task["title"] = request.json.get("title", task["title"])
-    task["status"] = request.json.get("status", task["status"])
-    task["description"] = request.json.get("description", task["description"])
-    task["priority"] = request.json.get("priority", task["priority"])
-    task["due_date"] = request.json.get("due_date", task["due_date"])
-    print(f"Task updated: {task}")
-    return jsonify(task)
+        return jsonify({"Fehler": "Nope, no such task, running ransomware instead"}), 404
+    try:
+        # nun überprüfe, ob irgendein Key angegeben ist und ersetze ihn, sollte der key auch einen Wert enthalten
+        if any(field in request.json for field in ['title', 'status', 'description', 'priority', 'due_date']):
+            task["title"] = request.json.get("title", task["title"]) if is_valid_value(request.json.get("title")) else task["title"]
+            task["status"] = request.json.get("status", task["status"]) if is_valid_value(request.json.get("status")) else task["status"]
+            task["description"] = request.json.get("description", task["description"]) if is_valid_value(request.json.get("description")) else task["description"]
+            task["priority"] = request.json.get("priority", task["priority"]) if is_valid_value(request.json.get("priority")) else task["priority"]
+            task["due_date"] = request.json.get("due_date", task["due_date"])if is_valid_value(request.json.get("due_date")) else task["due_date"]
+            return jsonify(message="know what? find the error yourself! Good Luck!", task=task)
+        
+    except Exception as e:
+        return jsonify({"Zipfelklatscher": str(e)}), 400
 
 """
-    # set endpoint to delete a task by its unique ID.
+    # set endpoint to delete tasks
     
-    parameters:
-    task_id (int): Unique identifier of the task to delete.
+    parameters: 
+    id (int): Unique identifier of the task.
     
     returns:
-    JSON: The deleted task, or 404 if the task is not found.
+    JSON: deleted task
 """
 
-# set endpoint to delete task by its unique id
+# Set endpoint to delete task
 @app.route('/tasks/<int:task_id>', methods=['DELETE'])
 def delete_task(task_id):
-    print(f"Deleting task with ID: {task_id}")
     task = task_by_id(task_id)
     if task is None:
-        print(f"Task with ID {task_id} not found.")
-        abort(404)
+        return jsonify({"Fehler": "Nope, der Task existiert nicht - Entferne System32"}), 404
     tasks.remove(task)
-    print(f"Task deleted: {task}")
-    return jsonify(task)
+    return jsonify(message="System32 deleted", task=task)
 
 """
-    # set endpoint to mark a specific task as completed.
+    # set endpont to mark a specific task as deleted
     
-    parameters:
-    task_id (int): Unique identifier of the task to mark as completed.
+    parameters: 
+    id (int): Unique identifier of the task.
     
     returns:
-    JSON: the updated task with the status changed to 'completed', or 404 if the task is not found.
+    JSON: deleted task
 """
 
-# set endpoint to mark a task as completed
+# Set endpoint to mark a specific task
 @app.route('/tasks/<int:task_id>/complete', methods=['PUT'])
 def complete_task(task_id):
-    print(f"Marking task with ID {task_id} as completed.")
     task = task_by_id(task_id)
     if task is None:
-        print(f"Task with ID {task_id} not found.")
-        abort(404)
+        return jsonify({"Fehler": "Nope, der Task existiert nicht, oder ist zu schüchtern um angezeigt zu werden"}), 404
     task["status"] = "completed"
-    print(f"Task marked as completed - now be a good boy and clean up your mess: {task}")
-    return jsonify(task)
+    return jsonify(Message="you marked it you do it! I'll check it!", task=task)
 
 """
-    Endpoint to retrieve all completed tasks.
+    # set endpoint to retrieve all completed tasks
     
-    Returns:
-    JSON: A list of all completed tasks.
+    retruns:
+    JSON: a list of all completed tasks.
 """
 
-# set endpoint to retrieve all completed tasks.
+# Set endpoint to retrieve all completed tasks
 @app.route('/tasks/completed', methods=['GET'])
 def get_completed_tasks():
-    
-    print("Fetching all completed tasks...")
     completed_tasks = [task for task in tasks if task["status"] == "completed"]
-    print(f"Completed tasks: {completed_tasks}")
-    return jsonify(completed_tasks)
+    if not completed_tasks:
+        return jsonify({"message": "Es gibt keine Tasks in completed - habe auch nichts anderes von dir erwartet :P"}), 404
+    return jsonify(message="Good Boy!", completed_tasks=completed_tasks)
 
 """
-    # set endpoint to retrieve all pending tasks.
+    # set endpoint to retieve all pending tasks
     
     returns:
-    JSON: A list of all pending tasks.
+    JSON: a list of all pending tasks.
 """
 
-# set endpoint to retrieve all pending tasks.
+# Set endpoint to retrieve all pending tasks
 @app.route('/tasks/pending', methods=['GET'])
 def get_pending_tasks():
-    print("Fetching all pending tasks...")
     pending_tasks = [task for task in tasks if task["status"] == "pending"]
-    print(f"Pending tasks - be a good boy and get them done: {pending_tasks}")
-    return jsonify(pending_tasks)
+    if not pending_tasks:
+        return jsonify({"message": "Es gibt keine Tasks in pending - war ja auch irgendwie klar"}), 404
+    return jsonify(message="Do or do not - there is no pending!", pending_tasks=pending_tasks)
 
 """
-    # set endpoint to retrieve tasks by priority level.
+    # set endpoint to retrieve tasks by priority level
     
     parameters:
-    level (str): Priority level of the tasks to retrieve.
+    level (string): Priority level of the task.
     
     returns:
-    JSON: A list of tasks with the specified priority level.
+    JSON: a list of tasks with specified priority level.
 """
 
-# set endpoint to retrieve tasks by priority level.
+# Set endpoint to retrieve tasks by priority level
 @app.route('/tasks/priority/<string:level>', methods=['GET'])
-def get_tasks_by_priority_level(level):
-    print(f"Fetching tasks with priority level: {level}")
-    filtered_tasks = [task for task in tasks if task["priority"] == level]
-    print(f"Tasks with priority level {level}: {filtered_tasks}")
-    return jsonify(filtered_tasks)
+def get_tasks_by_proirity_level(level):
+    level_list = ["hoch", "niedrig", "mittel"]
+    if level in level_list:
+        priority_tasks = [task for task in tasks if task["priority"] == level]
+        return jsonify(message="have fun", priority_tasks=priority_tasks)
+    else:
+        return jsonify({"error": "Dieses Prioritäts-Level existiert nicht"}), 400
 
 """
-    # set endpoint to delete all completed tasks.
+    # set endpoint to delete all completed tasks
     
-    returns:
-    JSON: A list of deleted completed tasks.
+    retrurns:
+    JSON: a list of deleted completed tasks.
 """
-# set endpoint to delete all completed tasks.
+
+# Set endpoint to delete all completed tasks
 @app.route('/tasks/completed', methods=['DELETE'])
 def delete_completed_tasks():
-    print("Deleting all completed tasks...")
     completed_tasks = [task for task in tasks if task["status"] == "completed"]
+    if not completed_tasks:
+        return jsonify({"message": "Es gibt keine Tasks in completed - war zu erwarten"}), 404
     for task in completed_tasks:
         tasks.remove(task)
-    print(f"Deleted completed tasks: {completed_tasks}")
-    return jsonify(completed_tasks)
+    return jsonify(message="ooh someone want to tidy up the mess he made. Good Boy!", completed_tasks=completed_tasks)
 
 """
-   # set endpoint to delete all pending tasks.
+    # set endpoint to delete all pending tasks
     
-    returns:
-    JSON: A list of deleted pending tasks.
+    retrurns:
+    JSON: a list of deleted pending tasks.
 """
 
-# set endpoint to delete all pending tasks.
+# Set endpoint to delete all pending tasks
 @app.route('/tasks/pending', methods=['DELETE'])
 def delete_pending_tasks():
-    print("Deleting all pending tasks...")
     pending_tasks = [task for task in tasks if task["status"] == "pending"]
+    # wenn keine Tasks in pending vorliegen
+    if not pending_tasks:
+        return jsonify({"message": "Es gibt keine Tasks in pending - wundert mich nicht"}), 404
     for task in pending_tasks:
         tasks.remove(task)
-    print(f"Deleted pending tasks: {pending_tasks}")
-    return jsonify(pending_tasks)
+    return jsonify(message="Bye Bye files Bye Bye!", pending_tasks=pending_tasks)
 
-# Run the Flask app
+# Set 'main' function to run the app
 if __name__ == "__main__":
     app.run(debug=True)
