@@ -16,6 +16,7 @@ Each task has the following structure:
 import os
 from flask import Flask, jsonify, request
 import api_beispieldaten as ts
+import datetime
   
 # Define the API overall function 
 app = Flask(__name__)
@@ -53,8 +54,8 @@ def is_valid_value(value):
 @app.route("/tasks", methods=["GET"])
 def get_tasks():
     if not tasks:
-        return jsonify({"message": "Es gibt keine Tasks"}), 404
-    return jsonify(message="Look at your mess, way to many open tasks, get them done!", tasks=tasks)
+        return ascii_art_1()
+    return jsonify(message="Look at your mess, way to many open tasks, get them done!",tasks=tasks)
 
 """
     # set endpoint to retrieve task by id
@@ -66,14 +67,83 @@ def get_tasks():
     dict: task with given id
 """
 
-# Set endpoint to retrieve a task by id
+ # Funktion um zu checken, ob auch wirklich ein Wert übergeben wurde
+def is_valid_value(value):
+    return value not in (None, '', [], {}, ())
+
+def is_valid_status(value):
+    right_status = ["pending", "completed"]
+    return value in right_status
+
+def is_valid_priority(value):
+    right_priority = ["hoch", "mittel", "niedrig"]
+    return value in right_priority
+
+# Define function 42 and print ASCII art
+@app.route('/tasks/function_42', methods=['GET'])
+def function_42():
+    ascii_art = """
+       .                          
+                     M                          
+                    dM                          
+                    MMr                         
+                   4MMML                  .     
+                   MMMMM.                xf     
+   .              "MMMMM               .MM-     
+    Mh..          +MMMMMM            .MMMM      
+    .MMM.         .MMMMML.          MMMMMh      
+     )MMMh.        MMMMMM         MMMMMMM       
+      3MMMMx.     'MMMMMMf      xnMMMMMM"       
+      '*MMMMM      MMMMMM.     nMMMMMMP"        
+        *MMMMMx    "MMMMM\\    .MMMMMMM=         
+         *MMMMMh   "MMMMM"   JMMMMMMP           
+           MMMMMM   3MMMM.  dMMMMMM            .
+            MMMMMM  "MMMM  .MMMMM(        .nnMP"
+=..          *MMMMx  MMM"  dMMMM"    .nnMMMMM*  
+  "MMn...     'MMMMr 'MM   MMM"   .nMMMMMMM*"   
+   "4MMMMnn..   *MMM  MM  MMP"  .dMMMMMMM""     
+     ^MMMMMMMMx.  *ML "M .M*  .MMMMMM**"        
+        *PMMMMMMhn. *x > M  .MMMM**""           
+           ""**MMMMhx/.h/ .=*"                  
+                    .3P"%....                   
+                  nP"     "*MMnx
+    """
+    return ascii_art
+
+# ascii artworks
+def ascii_art_1(): 
+    ascii_art_1 = """ .------..
+     -          -
+   /              \\
+ /                   \\
+/    .--._    .---.   |
+|  /      -__-     \\   |
+| |                 |  |
+||     ._   _.      ||
+||      o   o       ||
+||      _  |_      ||
+C|     (o\\_/o)     |O     Uhhh, this computer
+ \\      _____      /       is like, busted or
+   \\ ( /#####\\ ) /       something. So go away.
+    \\  `====='  /
+     \\  -___-  /
+      |       |
+      /-_____-\\
+    /           \\
+  /               \\
+ /__|  AC / DC  |__\\
+ | ||           |\\ \\
+"""
+    return ascii_art_1
+
+# Define Endpoint to retrieve task by id
 @app.route("/tasks/<int:task_id>", methods=["GET"])
 def get_task(task_id):
     task = task_by_id(task_id)
     if task:
-        return jsonify(task)
+        return jsonify(message="Congratiolatin you just found yourself a task!", task=task)
     else:
-        return jsonify({"Fehler": "Nope, site dosen't exit - search elsewhere"}), 404
+        return ascii_art_1() 
 
 """
     # set endpoint to create a new task
@@ -89,9 +159,9 @@ def get_task(task_id):
 @app.route('/tasks', methods=['POST'])
 def create_task():
     if not request.json:
-        return jsonify({"Fehler": "Request muss im JSON-Format sein"}), 400 
+        return jsonify({"Fehler": "Request muss im JSON-Format sein - warum muss ich dir das erklären?"}), 400 
     if 'title' not in request.json or 'description' not in request.json:
-        return jsonify({"Fehler": "Es müssen sowohl der title, wie auch die description gesetzt sein. Sollstest du eigent wissen"}), 400
+        return function_42()
     
     try:
         new_task = {
@@ -103,7 +173,7 @@ def create_task():
             "due_date": request.json.get("due_date", None)
         }
         tasks.append(new_task)
-        return jsonify(new_task), 201
+        return jsonify(message="oohpsie whoopsie - you just created yourself more work!", new_task=new_task), 201
     
     except Exception as e:
         return jsonify({"Fehler": str(e)}), 400
@@ -124,12 +194,18 @@ def update_task(task_id):
     task = task_by_id(task_id)
     # schaue ob der Task existiert
     if task is None:
-        return jsonify({"Fehler": "Nope, no such task, running ransomware instead"}), 404
+        return ascii_art_1()
     try:
         # nun überprüfe, ob irgendein Key angegeben ist und ersetze ihn, sollte der key auch einen Wert enthalten
         if any(field in request.json for field in ['title', 'status', 'description', 'priority', 'due_date']):
+            if 'status' in request.json and not is_valid_status(request.json.get('status')):
+                return jsonify({"message": "Nice try. The status is either pending or completed"}), 400
+            
+            if 'priority' in request.json and not is_valid_priority(request.json.get('priority')):
+                return jsonify({"message": "Dude, no! The priority is either hoch, mittel or niedrig."}), 400
+            
             task["title"] = request.json.get("title", task["title"]) if is_valid_value(request.json.get("title")) else task["title"]
-            task["status"] = request.json.get("status", task["status"]) if is_valid_value(request.json.get("status")) else task["status"]
+            task["status"] = request.json.get("status", task["status"]) if is_valid_status(request.json.get("status")) else task["status"]
             task["description"] = request.json.get("description", task["description"]) if is_valid_value(request.json.get("description")) else task["description"]
             task["priority"] = request.json.get("priority", task["priority"]) if is_valid_value(request.json.get("priority")) else task["priority"]
             task["due_date"] = request.json.get("due_date", task["due_date"])if is_valid_value(request.json.get("due_date")) else task["due_date"]
@@ -153,9 +229,9 @@ def update_task(task_id):
 def delete_task(task_id):
     task = task_by_id(task_id)
     if task is None:
-        return jsonify({"Fehler": "Nope, der Task existiert nicht - Entferne System32"}), 404
+        return ascii_art_1()
     tasks.remove(task)
-    return jsonify(message="System32 deleted", task=task)
+    return jsonify(message="System32 deleted - bye!", task=task)
 
 """
     # set endpont to mark a specific task as deleted
@@ -172,7 +248,7 @@ def delete_task(task_id):
 def complete_task(task_id):
     task = task_by_id(task_id)
     if task is None:
-        return jsonify({"Fehler": "Nope, der Task existiert nicht, oder ist zu schüchtern um angezeigt zu werden"}), 404
+        return ascii_art_1()
     task["status"] = "completed"
     return jsonify(Message="you marked it you do it! I'll check it!", task=task)
 
@@ -188,7 +264,7 @@ def complete_task(task_id):
 def get_completed_tasks():
     completed_tasks = [task for task in tasks if task["status"] == "completed"]
     if not completed_tasks:
-        return jsonify({"message": "Es gibt keine Tasks in completed - habe auch nichts anderes von dir erwartet :P"}), 404
+        return ascii_art_1()
     return jsonify(message="Good Boy!", completed_tasks=completed_tasks)
 
 """
@@ -203,7 +279,7 @@ def get_completed_tasks():
 def get_pending_tasks():
     pending_tasks = [task for task in tasks if task["status"] == "pending"]
     if not pending_tasks:
-        return jsonify({"message": "Es gibt keine Tasks in pending - war ja auch irgendwie klar"}), 404
+        return ascii_art_1()
     return jsonify(message="Do or do not - there is no pending!", pending_tasks=pending_tasks)
 
 """
@@ -222,9 +298,9 @@ def get_tasks_by_proirity_level(level):
     level_list = ["hoch", "niedrig", "mittel"]
     if level in level_list:
         priority_tasks = [task for task in tasks if task["priority"] == level]
-        return jsonify(message="have fun", priority_tasks=priority_tasks)
+        return jsonify(message="now look what you did or what you have to to dosent matter to me", priority_tasks=priority_tasks)
     else:
-        return jsonify({"error": "Dieses Prioritäts-Level existiert nicht"}), 400
+        return function_42()
 
 """
     # set endpoint to delete all completed tasks
@@ -238,10 +314,10 @@ def get_tasks_by_proirity_level(level):
 def delete_completed_tasks():
     completed_tasks = [task for task in tasks if task["status"] == "completed"]
     if not completed_tasks:
-        return jsonify({"message": "Es gibt keine Tasks in completed - war zu erwarten"}), 404
+        return ascii_art_1()
     for task in completed_tasks:
         tasks.remove(task)
-    return jsonify(message="ooh someone want to tidy up the mess he made. Good Boy!", completed_tasks=completed_tasks)
+    return jsonify(message="bye bye files bye bye", completed_tasks=completed_tasks)
 
 """
     # set endpoint to delete all pending tasks
@@ -256,11 +332,11 @@ def delete_pending_tasks():
     pending_tasks = [task for task in tasks if task["status"] == "pending"]
     # wenn keine Tasks in pending vorliegen
     if not pending_tasks:
-        return jsonify({"message": "Es gibt keine Tasks in pending - wundert mich nicht"}), 404
+        return ascii_art_1()
     for task in pending_tasks:
         tasks.remove(task)
     return jsonify(message="Bye Bye files Bye Bye!", pending_tasks=pending_tasks)
-
+    
 # Set 'main' function to run the app
 if __name__ == "__main__":
     app.run(debug=True)
