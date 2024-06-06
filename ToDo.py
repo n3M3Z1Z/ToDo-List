@@ -1,4 +1,13 @@
 """
+ _____     ____          _     _     _   
+|_   _|__ |  _ \  ___   | |   (_)___| |_ 
+  | |/ _ \| | | |/ _ \  | |   | / __| __|
+  | | (_) | |_| | (_) | | |___| \__ \ |_ 
+  |_|\___/|____/ \___/  |_____|_|___/\__|
+
+"""
+
+"""
 This script implements a simple ToDo list API using Flask.
 This API allows users to:
     - Create, Update, Delete, mark tasks as completed, filter or delete tasks by priority & status
@@ -13,7 +22,6 @@ Each task has the following structure:
 """
 
 # Import necessary modules, files & libraries
-import os
 from flask import Flask, jsonify, request
 import api_beispieldaten as ts
 import datetime
@@ -41,6 +49,7 @@ def task_by_id(task_id):
 # Funktion um zu checken, ob auch wirklich ein Wert übergeben wurde
 def is_valid_value(value):
     return value not in (None, '', [], {}, ())
+
 """
     # set endpoint to retrieve all tasks
     
@@ -79,7 +88,7 @@ def is_valid_priority(value):
     right_priority = ["hoch", "mittel", "niedrig"]
     return value in right_priority
 
-# Define function 42 and print ASCII art
+# Define function 42 and print ASCII art for most error 400
 @app.route('/tasks/function_42', methods=['GET'])
 def function_42():
     ascii_art = """
@@ -110,7 +119,7 @@ def function_42():
     """
     return ascii_art
 
-# ascii artworks
+# define function to call ascii artwork for error 404
 def ascii_art_1(): 
     ascii_art_1 = """ .------..
      -          -
@@ -141,7 +150,7 @@ C|     (o\\_/o)     |O     Uhhh, this computer
 def get_task(task_id):
     task = task_by_id(task_id)
     if task:
-        return jsonify(message="Congratiolatin you just found yourself a task!", task=task)
+        return jsonify(message="Congrats you just found yourself a task!", task=task)
     else:
         return ascii_art_1() 
 
