@@ -99,6 +99,13 @@ tasks = ts.tasks
 user_name = None 
 
 @app.before_request
+def no_slash():
+    url = request.url
+    if url.endswith('/'):
+        url = url[:-1]
+        return redirect(url)
+    
+@app.before_request
 def check_user_name():
     if request.endpoint not in ['hello_user', 'get_user_name'] and user_name == None:
         return redirect(url_for('hello_user'))
@@ -113,7 +120,7 @@ def get_user_name():
     
     global user_name 
     user_name = "Zipfelklatscher"  
-    return jsonify({"message": f"Hallo {user_name}, schön dich kennenzulernen."})
+    return jsonify({"message": f"Hallo {user_name}, nett dich kennenzulernen."})
 
         #return redirect(url_for('index'))
 
@@ -250,25 +257,25 @@ def function_42():
 def error_404(): 
     error_404 = f""" .------..
      -          -
-   /              \\
- /                   \\
+   /              \\\\
+ /                   \\\\
 /    .--._    .---.   |
-|  /      -__-     \\   |
+|  /      -__-     \\\\   |
 | |                 |  |
 ||     ._   _.      ||
 ||      o   o       ||
 ||      _  |_      ||
 C|     (o\\_/o)     |O     Uhhh, this computer
- \\      _____      /       is like, busted or
-   \\ ( /#####\\ ) /       something {user_name}. So go away.
-    \\  `====='  /
-     \\  -___-  /
+ \\\\      _____      /       is like, busted or
+   \\\\ ( /#####\\ ) /       something {user_name}. So go away.
+    \\\\  `====='  /
+     \\\\  -___-  /
       |       |            Error 404, page not found.
-      /-_____-\\
-    /           \\
-  /               \\
- /__|  AC / DC  |__\\
- | ||           |\\ \\
+      /-_____-\\\\
+    /           \\\\
+  /               \\\\
+ /__|  AC / DC  |__\\\\
+ | ||           |\\\\ \\\\
 """
     return error_404
 
@@ -303,9 +310,9 @@ def error_405():
    ||    - _ || | ---------
    ||       -|| |     //
    ||        || O\    __
-   ||        ||  \\  (..)
-   ||        ||   \\_|  |_
-   ||        ||    \  \/  )
+   ||        ||  \\\\  (..)
+   ||        ||   \\\\_|  |_
+   ||        ||    \\  \\/  )
    ||        ||     :    :|
    ||        ||     :    :|
    ||        ||     :====:O
@@ -352,8 +359,9 @@ def create_task():
     
     #if not request.json:
     #    return jsonify({"Fehler": "Request muss im JSON-Format sein"}), 400 
-    if 'title' not in request.json or 'description' not in request.json:
-        return jsonify({"Fehler": "Es müssen sowohl der title, wie auch die description gesetzt sein. Sollstest du eigent wissen"}), 400
+    if 'title' not in request.json or not isinstance(request.json['title'], str) or \
+   'description' not in request.json or not isinstance(request.json['description'], str):
+        return jsonify({"Fehler": "Es müssen sowohl der title, wie auch die description als Strings gesetzt sein. Solltest du eigentlich wissen."}), 400
     
     due_date_str = request.json.get("due_date")
     if due_date_str:
@@ -412,6 +420,12 @@ def update_task(task_id):
             
             if 'id' in request.json:
                 return jsonify({"message": "No, i want to keep my ID."})
+            
+            if 'title' in request.json and not isinstance(request.json['title'], str):
+                return jsonify({"message": "Hey, the description I need a string!"})
+            
+            if 'description' in request.json and not isinstance(request.json['description'], str):
+                return jsonify({"message": "Hey, the title needs to be a string!"})
             
             if 'due_date' in request.json:
                 due_date_str = request.json.get("due_date")
@@ -575,10 +589,10 @@ def upload():
 @app.route('/home/download', methods=['GET'])
 def download():
     download = """
-        _    _ _                             __ _ _           
+    _    _ _                             __ _ _           
    / \  | | |  _   _  ___  _   _ _ __   / _(_) | ___  ___ 
   / _ \ | | | | | | |/ _ \| | | | '__| | |_| | |/ _ \/ __|
- / ___ \| | | | |_| | (_) | |_| | |    |  _| | |  __/\__ \
+ / ___ \| | | | |_| | (_) | |_| | |    |  _| | |  __/\__ \\
 /_/   \_\_|_|  \__, |\___/ \__,_|_|    |_| |_|_|\___||___/
 | |__   __ ___ |___/__  | |__   ___  ___ _ __             
 | '_ \ / _` \ \ / / _ \ | '_ \ / _ \/ _ \ '_ \            
@@ -592,27 +606,27 @@ def download():
     return download
 
 # set an 'awsome' endpoint
-@app.route('/home/awsome')
-def awsome(): 
-    awsome = """
+@app.route('/home/awesome')
+def awesome(): 
+    awesome = """
              _nnnn_                      
         dGGGGMMb     ,"""""""""""""".
        @p~qp~~qMb    | Linux Rules! |
        M|@||@) M|   _;..............'
        @,----.JM| -'
-      JS^\__/  qKL
-     dZP        qKRb    and so do this awsome peapole that created this app!
+      JS^\\__/  qKL
+     dZP        qKRb    and so do these awesome people that created this app!
     dZP          qKKb
-   fZP            SMMb      Svea Kristina Wilkening
+   fZP            SMMb      Svea Wilkening
    HZM            MMMM          Tamina Adam
    FqM            MMMM              Markus Bacher
- __| ".        |\dS"qML                 Georg Gohmann
- |    `.       | `' \Zq                      Michael Herz
-_)      \.___.,|     .'
-\____   )MMMMMM|   .' And last but not least a big thank you to our
-     `-'       `--'   awsome victim eehhm i mean teacher 'Andreas Thomas Kellerer'
+ __| ".        |\\dS"qML                 Georg Gohmann
+ |    `.       | `' \\Zq                      Michael Herz
+_)      \\.___.,|     .'
+\\____   )MMMMMM|   .' And last but not least a big thank you to our
+     `-'       `--'   awesome victim eehhm i mean teacher 'Andreas Thomas Kellerer'
  """
-    return awsome
+    return awesome
 
 # Function to handle 400 Bad Request error
 @app.errorhandler(400)
