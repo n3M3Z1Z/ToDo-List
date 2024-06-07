@@ -86,29 +86,46 @@ To optimize the "expirience" higly recommend usind the 'Postman' app,
 """
 
 # Import necessary modules, files & libraries
-from flask import Flask, jsonify, request, g
+from flask import Flask, jsonify, request, redirect, url_for
 import api_beispieldaten as ts
 from datetime import datetime
-import os
+
   
 # Define the API overall function 
 app = Flask(__name__)
 
 # Import 'tasks' from 'tasks_templet.py'
 tasks = ts.tasks
+user_name = None 
 
+@app.before_request
+def check_user_name():
+    if request.endpoint not in ['hello_user', 'get_user_name'] and user_name == None:
+        return redirect(url_for('hello_user'))
+    
 # ask for the user's name
-@app.route("/user", methods=["GET"])
+@app.route("/user", methods=["POST"])
 def get_user_name():
-    user_name = input("Please enter your name: ")
-    user_name = "Zipfelklatscher"
-    return jasonify(message=f"Welcome {user_name} enjoy our API!")
+
+    data = request.get_json()
+    if not data or 'user_name' not in data or not data['user_name']:
+        return jsonify({"message": "Please provide a non-empty user name in the JSON payload with the key 'user_name'."}), 400
+    
+    global user_name 
+    user_name = "Zipfelklatscher"  
+    return jsonify({"message": f"Hallo {user_name}, schön dich kennenzulernen."})
+
+        #return redirect(url_for('index'))
+
+@app.route("/user", methods=["GET"])
+def hello_user():
+    return jsonify({"message": "Please set your user name by sending a POST request with JSON containing the key 'user_name' at the endpoint /user."})
 
 # set 'home' endpoint
 @app.route("/home", methods=["GET"])
 def home():
     home_content = {
-        "message": "Welcome to the ToDo List API {user_name}!",
+        "message": f"Welcome to the ToDo List API {user_name}!",
         "actions": [
             "- create a new task",
             "- update an existing task",
@@ -231,7 +248,7 @@ def function_42():
 
 # define function to call ascii artwork for error 404 - Page not found
 def error_404(): 
-    error_404 = """ .------..
+    error_404 = f""" .------..
      -          -
    /              \\
  /                   \\
@@ -279,7 +296,7 @@ l         ]     o !__./
 
 # define function to call ascii artwork for error 405 - Method Not Allowed
 def error_405():
-    error_405 = """
+    error_405 = f"""
      |____________|_
    ||--------|| | _________
    ||- _     || |(Bye Bye )
@@ -541,28 +558,16 @@ def delete_pending_tasks():
 @app.route('/home/upload', methods=['POST'])
 def upload():
     upload = """
-        __        __   _                            _                           
-\ \      / /__| | ___ ___  _ __ ___   ___  | |_ ___     ___  _   _ _ __ 
- \ \ /\ / / _ \ |/ __/ _ \| '_ ` _ \ / _ \ | __/ _ \   / _ \| | | | '__|
-  \ V  V /  __/ | (_| (_) | | | | | |  __/ | || (_) | | (_) | |_| | |   
- _ \_/\_/_\___|_|\___\___/|_| |_|_|_|\___|_ \__\___/   \___/ \__,_|_|   
-| | | |/ _ \| \ | \ \ / /  _ \ / _ \_   _| |                            
-| |_| | | | |  \| |\ V /| |_) | | | || | | |                            
-|  _  | |_| | |\  | | | |  __/| |_| || | |_|                            
-|_|_|_|\___/|_| \_| |_| |_|    \___/ |_| (_)        _ _                 
-|  _ \(_) __| |  _   _  ___  _   _   _ __ ___  __ _| | |_   _           
-| | | | |/ _` | | | | |/ _ \| | | | | '__/ _ \/ _` | | | | | |          
-| |_| | | (_| | | |_| | (_) | |_| | | | |  __/ (_| | | | |_| |          
-|____/|_|\__,_|  \__, |\___/ \__,_| |_|  \___|\__,_|_|_|\__, |          
- _   _     _     |___/                                  |___/_     _    
-| |_| |__ (_)_ __ | | __ __      _____  __      _____  _   _| | __| |   
-| __| '_ \| | '_ \| |/ / \ \ /\ / / _ \ \ \ /\ / / _ \| | | | |/ _` |   
-| |_| | | | | | | |   <   \ V  V /  __/  \ V  V / (_) | |_| | | (_| |   
- \__|_| |_|_|_| |_|_|\_\   \_/\_/ \___|   \_/\_/ \___/ \__,_|_|\__,_|   
-| |__   ___   ___  ___     ___ __ _ _ __ ___| | ___  ___ __|__ \        
-| '_ \ / _ \ / __|/ _ \   / __/ _` | '__/ _ \ |/ _ \/ __/ __|/ /        
-| |_) |  __/ \__ \ (_) | | (_| (_| | | |  __/ |  __/\__ \__ \_|         
-|_.__/ \___| |___/\___/   \___\__,_|_|  \___|_|\___||___/___(_)  
+ _   _                                   __                       _         
+| | | | ___ _   _   _   _  ___  _   _   / _| ___  _   _ _ __   __| |   __ _ 
+| |_| |/ _ \ | | | | | | |/ _ \| | | | | |_ / _ \| | | | '_ \ / _` |  / _` |
+|  _  |  __/ |_| | | |_| | (_) | |_| | |  _| (_) | |_| | | | | (_| | | (_| |
+|_| |_|\___|\__, |  \__, |\___/ \__,_| |_|_ \___/ \__,_|_| |_|\__,_|  \__,_|
+| | | | ___ |___/   |___/   _ _ __   ___ | |_    ___ _ __  (_) ___  _   _   
+| |_| |/ _ \| '_ \ / _ \ | | | '_ \ / _ \| __|  / _ \ '_ \ | |/ _ \| | | |  
+|  _  | (_) | | | |  __/ |_| | |_) | (_) | |_  |  __/ | | || | (_) | |_| |  
+|_| |_|\___/|_| |_|\___|\__, | .__/ \___/ \__|  \___|_| |_|/ |\___/ \__, |  
+                        |___/|_|                         |__/       |___/  
 """
     return upload
 
