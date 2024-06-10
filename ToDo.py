@@ -122,7 +122,7 @@ def get_user_name():
     user_name = "Zipfelklatscher"  
     return jsonify({"message": f"Hallo {user_name}, nett dich kennenzulernen."})
 
-        #return redirect(url_for('index'))
+        # return redirect(url_for('index'))
 
 @app.route("/user", methods=["GET"])
 def hello_user():
@@ -153,6 +153,7 @@ def home():
         }
     }
     return jsonify(home_content), 200
+
 """
     *set endpoint to retrieve task by id*
     
@@ -181,6 +182,7 @@ def is_valid_priority(value):
     right_priority = ["hoch", "Hoch", "mittel", "Mittel", "niedrig", "Niedrig"]
     return value in right_priority
 
+# functionto check if 'due_date' is valid
 def parse_and_validate_due_date(due_date_str):
     possible_formats = ["%Y-%m-%d", "%d.%m.%Y", "%m/%d/%Y", "%d-%m-%Y"]
     for fmt in possible_formats:
@@ -281,7 +283,7 @@ C|     (o\\_/o)     |O     Uhhh, this computer
 
 # define function to call ascii artwork for error 400  - Bad Request (at least some of them)
 def error_400():
-    error_400 = """
+    error_400 = f"""
      .'/,-Y"     "~-.  
  l.Y             ^.           
  /\               _\_      "DOH!"   
@@ -357,8 +359,8 @@ def create_task():
     except Exception as e:
         return jsonify({"Fehler": f"Failed to decode JSON object: {str(e)}"}), 400
     
-    #if not request.json:
-    #    return jsonify({"Fehler": "Request muss im JSON-Format sein"}), 400 
+    # if not request.json:
+    # return jsonify({"Fehler": "Request muss im JSON-Format sein"}), 400 
     if 'title' not in request.json or not isinstance(request.json['title'], str) or \
    'description' not in request.json or not isinstance(request.json['description'], str):
         return jsonify({"Fehler": "Es müssen sowohl der title, wie auch die description als Strings gesetzt sein. Solltest du eigentlich wissen."}), 400
@@ -415,18 +417,23 @@ def update_task(task_id):
             if 'status' in request.json and not is_valid_status(request.json.get('status')):
                 return jsonify({"message": f"Nice try {user_name} . The status is either pending or completed"}), 400
             
+            # check if 'priority' is valid
             if 'priority' in request.json and not is_valid_priority(request.json.get('priority')):
                 return jsonify({"message": f"Dude, no! The priority is either hoch, mittel or niedrig."}), 400
             
+            # check if 'id' format is valid
             if 'id' in request.json:
                 return jsonify({"message": "No, i want to keep my ID."})
             
+            # check if 'title' format is valid
             if 'title' in request.json and not isinstance(request.json['title'], str):
                 return jsonify({"message": "Hey, the description I need a string!"})
             
+            # check if 'description' format is valid
             if 'description' in request.json and not isinstance(request.json['description'], str):
                 return jsonify({"message": "Hey, the title needs to be a string!"})
             
+            # check if 'due_date' is valid and not in the past
             if 'due_date' in request.json:
                 due_date_str = request.json.get("due_date")
                 if due_date_str:
@@ -615,7 +622,7 @@ def awesome():
        M|@||@) M|   _;..............'
        @,----.JM| -'
       JS^\\__/  qKL
-     dZP        qKRb    and so do these awesome people that created this app!
+     dZP        qKRb    and so do the awesome people that created this app!
     dZP          qKKb
    fZP            SMMb      Svea Wilkening
    HZM            MMMM          Tamina Adam
